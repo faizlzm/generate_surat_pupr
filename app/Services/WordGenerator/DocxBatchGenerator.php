@@ -94,26 +94,27 @@ final class DocxBatchGenerator
 
                     $vars = $template->getVariables();
                     if (in_array("tembusan_no_p{$page}", $vars, true) || in_array("tembusan_text_p{$page}", $vars, true)) {
-                        if (count($copies) === 1) {
-                            $template->setValue("tembusan_no_p{$page}", '1.');
-                            $template->setValue("tembusan_text_p{$page}", trim((string) $copies[0]));
-                        } elseif (class_exists(\PhpOffice\PhpWord\Element\TextRun::class) && method_exists($template, 'setComplexValue')) {
-                            $run = new \PhpOffice\PhpWord\Element\TextRun();
-                            foreach ($copies as $offset => $copy) {
-                                $run->addText(($offset + 1).'. '.trim((string) $copy));
-                                if ($offset < count($copies) - 1) {
-                                    $run->addTextBreak();
+                        // Jika keduanya berada di sel/teks yang sama (template sederhana), hindari duplikasi
+                        // dengan menuliskan nomor+teks pada placeholder nomor dan mengosongkan placeholder teks.
+                        $template->setValue("tembusan_no_p{$page}", '1. '.trim((string) ($copies[0] ?? '')));
+                        $template->setValue("tembusan_text_p{$page}", '');
+                        if (count($copies) > 1) {
+                            if (class_exists(\PhpOffice\PhpWord\Element\TextRun::class) && method_exists($template, 'setComplexValue')) {
+                                $run = new \PhpOffice\PhpWord\Element\TextRun();
+                                foreach ($copies as $offset => $copy) {
+                                    $run->addText(($offset + 1).'. '.trim((string) $copy));
+                                    if ($offset < count($copies) - 1) {
+                                        $run->addTextBreak();
+                                    }
                                 }
+                                $template->setComplexValue("tembusan_no_p{$page}", $run);
+                            } else {
+                                $lines = [];
+                                foreach ($copies as $offset => $copy) {
+                                    $lines[] = ($offset + 1).'. '.trim((string) $copy);
+                                }
+                                $template->setValue("tembusan_no_p{$page}", implode("\n", $lines));
                             }
-                            $template->setComplexValue("tembusan_no_p{$page}", $run);
-                            $template->setValue("tembusan_text_p{$page}", '');
-                        } else {
-                            $lines = [];
-                            foreach ($copies as $offset => $copy) {
-                                $lines[] = ($offset + 1).'. '.trim((string) $copy);
-                            }
-                            $template->setValue("tembusan_no_p{$page}", implode("\n", $lines));
-                            $template->setValue("tembusan_text_p{$page}", '');
                         }
                     }
                 }
