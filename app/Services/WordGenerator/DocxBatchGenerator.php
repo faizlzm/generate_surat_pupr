@@ -134,7 +134,12 @@ final class DocxBatchGenerator
                 $documents[] = $path;
             }
 
-            $zipPath = rtrim($outputDir, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'Hasil_Surat_Teguran.zip';
+            $batchName = '';
+            if (isset($payload['nama_kumpulan_surat']) && is_string($payload['nama_kumpulan_surat'])) {
+                $batchName = trim($payload['nama_kumpulan_surat']);
+            }
+            $zipName = self::safeFilename($batchName, 'Hasil_Surat_Teguran', 80).'.zip';
+            $zipPath = rtrim($outputDir, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$zipName;
             $zip = new ZipArchive();
             $opened = $zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
             if ($opened !== true) {
@@ -207,13 +212,13 @@ final class DocxBatchGenerator
         return $combined;
     }
 
-    private static function safeFilename(string $name): string
+    private static function safeFilename(string $name, string $fallback = 'Penerima', int $max = 55): string
     {
         $ascii = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name);
         $ascii = $ascii === false ? $name : $ascii;
-        $safe = preg_replace('/[^A-Za-z0-9_-]+/', '_', $ascii) ?? 'Penerima';
+        $safe = preg_replace('/[^A-Za-z0-9_-]+/', '_', $ascii) ?? $fallback;
         $safe = trim($safe, '_');
 
-        return substr($safe !== '' ? $safe : 'Penerima', 0, 55);
+        return substr($safe !== '' ? $safe : $fallback, 0, $max);
     }
 }

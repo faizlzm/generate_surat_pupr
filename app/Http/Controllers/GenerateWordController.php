@@ -79,9 +79,11 @@ class GenerateWordController extends Controller
 
             $this->cleanupRunDir($runDir);
 
+            $zipName = basename($zipPath);
+
             return response($zipContent, 200, [
                 'Content-Type' => 'application/zip',
-                'Content-Disposition' => 'attachment; filename="Hasil_Surat_Teguran.zip"',
+                'Content-Disposition' => 'attachment; filename="'.$zipName.'"',
                 'Content-Length' => (string) strlen($zipContent),
             ]);
         } catch (InvalidArgumentException $e) {
