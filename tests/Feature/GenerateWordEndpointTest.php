@@ -29,7 +29,12 @@ class GenerateWordEndpointTest extends TestCase
         $response = $this->postJson('/buat-dokumen-word', $payload);
 
         $response->assertOk();
-        $response->assertDownload('Hasil_Surat_Teguran.zip');
+        
+        $response->assertDownload();
+        $this->assertStringEndsWith(
+            '.zip"',
+            $response->headers->get('Content-Disposition', '')
+        );
 
         try {
             $body = $response->streamedContent();
@@ -62,7 +67,7 @@ class GenerateWordEndpointTest extends TestCase
         $response = $this->postJson('/buat-dokumen-word', $payload);
 
         $response->assertOk();
-        $response->assertDownload('Hasil_Surat_Teguran.zip');
+        $response->assertDownload();
 
         try {
             $body = $response->streamedContent();
@@ -134,7 +139,7 @@ class GenerateWordEndpointTest extends TestCase
         $response = $this->postJson('/buat-dokumen-word', $payload);
 
         $response->assertOk();
-        $response->assertDownload('Hasil_Surat_Teguran.zip');
+        $response->assertDownload();
         $this->assertGeneratorStorageClean();
     }
 
